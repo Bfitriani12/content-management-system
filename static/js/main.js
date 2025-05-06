@@ -1,15 +1,58 @@
-// Initialize tooltips
+// Initialize tooltips and popovers
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
     // Initialize Bootstrap popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
+    });
+
+    // Auto-hide flash messages after 5 seconds
+    var flashMessages = document.querySelectorAll('.alert');
+    flashMessages.forEach(function(message) {
+        setTimeout(function() {
+            var alert = new bootstrap.Alert(message);
+            alert.close();
+        }, 5000);
+    });
+
+    // Handle form submissions
+    var forms = document.querySelectorAll('form[data-ajax="true"]');
+    forms.forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: form.method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showAlert('success', data.message);
+                    // Reload page or update content
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    }
+                } else {
+                    // Show error message
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', 'An error occurred. Please try again.');
+            });
+        });
     });
 
     // File input preview
@@ -69,8 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Form validation
-    const forms = document.querySelectorAll('.needs-validation');
-    forms.forEach(form => {
+    const formsValidation = document.querySelectorAll('.needs-validation');
+    formsValidation.forEach(form => {
         form.addEventListener('submit', function(event) {
             if (!form.checkValidity()) {
                 event.preventDefault();
@@ -79,57 +122,37 @@ document.addEventListener('DOMContentLoaded', function() {
             form.classList.add('was-validated');
         });
     });
+});
 
-    // AJAX form submission
-    const ajaxForms = document.querySelectorAll('.ajax-form');
-    ajaxForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: this.method,
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show';
-                    alert.innerHTML = `
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    form.insertAdjacentElement('beforebegin', alert);
+// Function to show alert messages
+function showAlert(type, message) {
+    var alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    var container = document.querySelector('main');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(function() {
+        var alert = new bootstrap.Alert(alertDiv);
+        alert.close();
+    }, 5000);
+}
 
-                    // Redirect if specified
-                    if (data.redirect) {
-                        setTimeout(() => {
-                            window.location.href = data.redirect;
-                        }, 1500);
-                    }
-                } else {
-                    // Show error message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-danger alert-dismissible fade show';
-                    alert.innerHTML = `
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    form.insertAdjacentElement('beforebegin', alert);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-danger alert-dismissible fade show';
-                alert.innerHTML = `
-                    An error occurred. Please try again.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                form.insertAdjacentElement('beforebegin', alert);
-            });
-        });
-    });
-}); 
+// Function to confirm delete actions
+function confirmDelete(message) {
+    return confirm(message || 'Are you sure you want to delete this item?');
+}
+
+// Function to handle file input changes
+function handleFileInput(input) {
+    var fileName = input.files[0]?.name;
+    if (fileName) {
+        var label = input.nextElementSibling;
+        label.textContent = fileName;
+    }
+} 

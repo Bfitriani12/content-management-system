@@ -44,6 +44,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), default='author')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     posts = db.relationship('Post', backref='author', lazy=True)
+    reset_token = db.Column(db.String(128))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -146,6 +147,107 @@ def logout():
     except Exception as e:
         flash(f'Error during logout: {str(e)}', 'danger')
     return redirect(url_for('login'))
+
+@app.route('/admin/posts')
+@login_required
+def admin_posts():
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return render_template('admin/posts.html', posts=posts)
+
+@app.route('/admin/categories')
+@login_required
+def admin_categories():
+    categories = Category.query.all()
+    return render_template('admin/categories.html', categories=categories)
+
+@app.route('/admin/media')
+@login_required
+def admin_media():
+    media_files = Media.query.order_by(Media.created_at.desc()).all()
+    return render_template('admin/media.html', media_files=media_files)
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    users = User.query.all()
+    return render_template('admin/users.html', users=users)
+
+@app.route('/admin/settings')
+@login_required
+def admin_settings():
+    return render_template('admin/settings.html')
+
+@app.route('/admin/profile')
+@login_required
+def admin_profile():
+    return render_template('admin/profile.html')
+
+@app.route('/admin/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('admin_dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            email = request.form.get('email')
+            user = User.query.filter_by(email=email).first()
+            
+            if user:
+                # Generate password reset token
+                token = generate_password_hash(email + str(datetime.utcnow()))
+                user.reset_token = token
+                db.session.commit()
+                
+                # Send password reset email
+                reset_url = url_for('reset_password', token=token, _external=True)
+                msg = Message('Password Reset Request',
+                            recipients=[user.email])
+                msg.body = f'''To reset your password, visit the following link:
+{reset_url}
+
+If you did not make this request then simply ignore this email.
+'''
+                mail.send(msg)
+                
+                flash('Password reset instructions have been sent to your email.', 'success')
+                return redirect(url_for('login'))
+            
+            flash('Email address not found.', 'danger')
+        except Exception as e:
+            flash(f'Error processing request: {str(e)}', 'danger')
+    
+    return render_template('admin/forgot_password.html')
+
+@app.route('/admin/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('admin_dashboard'))
+    
+    try:
+        user = User.query.filter_by(reset_token=token).first()
+        if not user:
+            flash('Invalid or expired password reset link.', 'danger')
+            return redirect(url_for('login'))
+        
+        if request.method == 'POST':
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if password != confirm_password:
+                flash('Passwords do not match.', 'danger')
+                return render_template('admin/reset_password.html')
+            
+            user.set_password(password)
+            user.reset_token = None
+            db.session.commit()
+            
+            flash('Your password has been reset successfully.', 'success')
+            return redirect(url_for('login'))
+        
+        return render_template('admin/reset_password.html')
+    except Exception as e:
+        flash(f'Error processing request: {str(e)}', 'danger')
+        return redirect(url_for('login'))
 
 # Error handlers
 @app.errorhandler(404)
