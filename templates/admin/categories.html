@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Kategori{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-success">Kategori</h1>
+        <a href="{{ url_for('admin_create_category') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Kategori Baru
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Daftar Kategori</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Slug</th>
+                            <th>Deskripsi</th>
+                            <th>Artikel</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>{{ category.slug }}</td>
+                            <td>{{ category.description or '-' }}</td>
+                            <td>{{ category.posts|length }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_edit_category', category_id=category.id) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-danger" onclick="deleteCategory({{ category.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteCategory(categoryId) {
+    if (confirm('Apakah Anda yakin ingin menghapus kategori ini?')) {
+        fetch(`/admin/categories/${categoryId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Gagal menghapus kategori');
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

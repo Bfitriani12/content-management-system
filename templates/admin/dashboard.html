@@ -1,116 +1,141 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - CMS{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Statistics Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-1">Posts</h6>
-                            <h2 class="mb-0">{{ stats.posts }}</h2>
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-primary">Dashboard</h1>
+        <div class="text-muted">Selamat datang, {{ current_user.full_name or current_user.username }}!</div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('admin_posts') }}" class="text-decoration-none">
+                <div class="card border-left-primary shadow h-100 py-2 transition-hover">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Artikel</div>
+                                <div class="h5 mb-0 font-weight-bold text-primary">{{ stats.posts }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-file-alt fa-2x text-primary"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-file-alt fa-2x opacity-50"></i>
                     </div>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="{{ url_for('admin_posts') }}" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-angle-right text-white"></i>
-                </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-1">Categories</h6>
-                            <h2 class="mb-0">{{ stats.categories }}</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('admin_categories') }}" class="text-decoration-none">
+                <div class="card border-left-success shadow h-100 py-2 transition-hover">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Kategori</div>
+                                <div class="h5 mb-0 font-weight-bold text-success">{{ stats.categories }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-tags fa-2x text-success"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-folder fa-2x opacity-50"></i>
                     </div>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="{{ url_for('admin_categories') }}" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-angle-right text-white"></i>
-                </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-1">Users</h6>
-                            <h2 class="mb-0">{{ stats.users }}</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('admin_users') }}" class="text-decoration-none">
+                <div class="card border-left-info shadow h-100 py-2 transition-hover">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Pengguna</div>
+                                <div class="h5 mb-0 font-weight-bold text-info">{{ stats.users }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-info"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-users fa-2x opacity-50"></i>
                     </div>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="{{ url_for('admin_users') }}" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-angle-right text-white"></i>
-                </div>
-            </div>
+            </a>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-1">Media Files</h6>
-                            <h2 class="mb-0">{{ stats.media }}</h2>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('admin_media') }}" class="text-decoration-none">
+                <div class="card border-left-warning shadow h-100 py-2 transition-hover">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Media</div>
+                                <div class="h5 mb-0 font-weight-bold text-warning">{{ stats.media }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-images fa-2x text-warning"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-images fa-2x opacity-50"></i>
                     </div>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a href="{{ url_for('admin_media') }}" class="text-white text-decoration-none">View Details</a>
-                    <i class="fas fa-angle-right text-white"></i>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Recent Posts -->
     <div class="row">
-        <!-- Recent Posts -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Posts</h5>
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Artikel Terbaru</h6>
+                    <a href="{{ url_for('admin_posts') }}" class="btn btn-sm btn-primary">
+                        Lihat Semua
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
+                                    <th>Judul</th>
+                                    <th>Penulis</th>
                                     <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
+                                    <th>Dibuat</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for post in recent_posts %}
                                 <tr>
-                                    <td>{{ post.title }}</td>
-                                    <td>{{ post.author.username }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if post.featured_image %}
+                                            <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                            {% else %}
+                                            <i class="fas fa-file-alt fa-2x text-primary me-2"></i>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ post.title }}</div>
+                                                <small class="text-muted">{{ post.slug }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-lg text-primary me-2"></i>
+                                            {{ post.author.username }}
+                                        </div>
+                                    </td>
                                     <td>
                                         <span class="badge bg-{{ 'success' if post.status == 'published' else 'warning' }}">
-                                            {{ post.status }}
+                                            {{ 'Dipublikasi' if post.status == 'published' else 'Draft' }}
                                         </span>
                                     </td>
-                                    <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
-                                        <a href="{{ url_for('admin_edit_post', post_id=post.id) }}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                        <div>{{ post.created_at.strftime('%d-%m-%Y') }}</div>
+                                        <small class="text-muted">{{ post.created_at.strftime('%H:%M') }}</small>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -122,27 +147,64 @@
         </div>
 
         <!-- Recent Users -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Users</h5>
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Pengguna Terbaru</h6>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-primary">
+                        Lihat Semua
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        {% for user in recent_users %}
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ user.username }}</h6>
-                                <small>{{ user.created_at.strftime('%Y-%m-%d') }}</small>
-                            </div>
-                            <p class="mb-1">{{ user.email }}</p>
-                            <small class="text-muted">Role: {{ user.role }}</small>
-                        </div>
-                        {% endfor %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Pengguna</th>
+                                    <th>Role</th>
+                                    <th>Bergabung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-lg text-primary me-2"></i>
+                                            <div>
+                                                <div class="fw-bold">{{ user.username }}</div>
+                                                <small class="text-muted">{{ user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if user.role == 'admin' else 'info' }}">
+                                            {{ user.role|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div>{{ user.created_at.strftime('%d-%m-%Y') }}</div>
+                                        <small class="text-muted">{{ user.created_at.strftime('%H:%M') }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.transition-hover {
+    transition: transform 0.2s ease-in-out;
+}
+
+.transition-hover:hover {
+    transform: translateY(-5px);
+    cursor: pointer;
+}
+</style>
 {% endblock %} 

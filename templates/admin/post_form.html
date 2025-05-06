@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Ubah' if post else 'Buat' }} Artikel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{{ 'Ubah' if post else 'Buat' }} Artikel</h1>
+        <a href="{{ url_for('admin_posts') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali ke Artikel
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_edit_post', post_id=post.id) if post else url_for('admin_create_post') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label for="title" class="form-label">Judul</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ post.title if post else '' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="slug" class="form-label">Slug</label>
+                    <input type="text" class="form-control" id="slug" name="slug" value="{{ post.slug if post else '' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="content" class="form-label">Konten</label>
+                    <textarea class="form-control" id="content" name="content" rows="10" required>{{ post.content if post else '' }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="categories" class="form-label">Kategori</label>
+                    <select class="form-select" id="categories" name="categories" multiple>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if post and category in post.categories %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status" required>
+                        <option value="draft" {% if post and post.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if post and post.status == 'published' %}selected{% endif %}>Dipublikasi</option>
+                    </select>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Simpan Perubahan' if post else 'Buat Artikel' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Summernote editor
+    $('#content').summernote({
+        height: 300,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ]
+    });
+
+    // Auto-generate slug from title
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+    
+    titleInput.addEventListener('input', function() {
+        slugInput.value = this.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    });
+
+    // Initialize Select2 for categories
+    $('#categories').select2({
+        placeholder: 'Pilih kategori',
+        allowClear: true
+    });
+});
+</script>
+{% endblock %} 

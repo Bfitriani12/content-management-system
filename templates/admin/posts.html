@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Artikel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-primary">Artikel</h1>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-sort"></i> 
+                    {% if sort == 'newest' %}
+                        Terbaru
+                    {% elif sort == 'oldest' %}
+                        Terlama
+                    {% elif sort == 'title' %}
+                        Judul (A-Z)
+                    {% elif sort == 'status' %}
+                        Status
+                    {% else %}
+                        Urutkan
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item {{ 'active' if sort == 'newest' }}" href="{{ url_for('admin_posts', sort='newest', status=status) }}">Terbaru</a></li>
+                    <li><a class="dropdown-item {{ 'active' if sort == 'oldest' }}" href="{{ url_for('admin_posts', sort='oldest', status=status) }}">Terlama</a></li>
+                    <li><a class="dropdown-item {{ 'active' if sort == 'title' }}" href="{{ url_for('admin_posts', sort='title', status=status) }}">Judul (A-Z)</a></li>
+                    <li><a class="dropdown-item {{ 'active' if sort == 'status' }}" href="{{ url_for('admin_posts', sort='status', status=status) }}">Status</a></li>
+                </ul>
+            </div>
+            <a href="{{ url_for('admin_create_post') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Artikel Baru
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Daftar Artikel</h6>
+            <div class="btn-group">
+                <a href="{{ url_for('admin_posts', status='all', sort=sort) }}" class="btn btn-sm btn-outline-primary {{ 'active' if status == 'all' }}">Semua</a>
+                <a href="{{ url_for('admin_posts', status='published', sort=sort) }}" class="btn btn-sm btn-outline-primary {{ 'active' if status == 'published' }}">Dipublikasi</a>
+                <a href="{{ url_for('admin_posts', status='draft', sort=sort) }}" class="btn btn-sm btn-outline-primary {{ 'active' if status == 'draft' }}">Draft</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Judul</th>
+                            <th>Kategori</th>
+                            <th>Penulis</th>
+                            <th>Status</th>
+                            <th>Dibuat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if post.featured_image %}
+                                    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-file-alt fa-2x text-primary me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ post.title }}</div>
+                                        <small class="text-muted">{{ post.slug }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if post.categories %}
+                                    {% for category in post.categories %}
+                                    <span class="badge bg-success me-1">{{ category.name }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Tanpa Kategori</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ post.author.username }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if post.status == 'published' else 'warning' }}">
+                                    {{ 'Dipublikasi' if post.status == 'published' else 'Draft' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div>{{ post.created_at.strftime('%d-%m-%Y') }}</div>
+                                <small class="text-muted">{{ post.created_at.strftime('%H:%M') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('admin_edit_post', post_id=post.id) }}" class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if post.status == 'draft' %}
+                                    <button class="btn btn-sm btn-success" onclick="publishPost({{ post.id }})" title="Publish">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-warning" onclick="unpublishPost({{ post.id }})" title="Unpublish">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-danger" onclick="deletePost({{ post.id }})" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deletePost(postId) {
+    if (confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
+        fetch(`/admin/posts/${postId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Gagal menghapus artikel');
+            }
+        });
+    }
+}
+
+function publishPost(postId) {
+    if (confirm('Apakah Anda yakin ingin mempublikasikan artikel ini?')) {
+        fetch(`/admin/posts/${postId}/publish`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Gagal mempublikasikan artikel');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mempublikasikan artikel');
+        });
+    }
+}
+
+function unpublishPost(postId) {
+    if (confirm('Apakah Anda yakin ingin mengubah artikel ini menjadi draft?')) {
+        fetch(`/admin/posts/${postId}/unpublish`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Gagal mengubah status artikel');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengubah status artikel');
+        });
+    }
+}
+</script>
+{% endblock %} 

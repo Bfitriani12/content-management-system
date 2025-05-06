@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - CMS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profil Pengguna</h5>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('admin_profile') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nama Pengguna</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Surel</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name }}">
+                        </div>
+
+                        <hr>
+
+                        <h6 class="mb-3">Ubah Kata Sandi</h6>
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Kata Sandi Saat Ini</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Kata Sandi Baru</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Konfirmasi Kata Sandi Baru</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informasi Akun -->
+            <div class="card shadow mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Informasi Akun</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Peran:</strong> {{ 'Administrator' if current_user.role == 'admin' else 'Penulis' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Tanggal Bergabung:</strong> {{ current_user.created_at.strftime('%d-%m-%Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Jumlah Artikel:</strong> {{ current_user.posts|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
