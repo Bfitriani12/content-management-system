@@ -17,6 +17,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+# Create uploads directory if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 # Email configuration
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -92,20 +95,24 @@ def load_user(user_id):
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin')
 @login_required
 def admin_dashboard():
-    stats = {
-        'posts': Post.query.count(),
-        'categories': Category.query.count(),
-        'users': User.query.count(),
-        'media': Media.query.count()
-    }
-    recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
-    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
-    return render_template('admin/dashboard.html', stats=stats, recent_posts=recent_posts, recent_users=recent_users)
+    try:
+        stats = {
+            'posts': Post.query.count(),
+            'categories': Category.query.count(),
+            'users': User.query.count(),
+            'media': Media.query.count()
+        }
+        recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
+        recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+        return render_template('admin/dashboard.html', stats=stats, recent_posts=recent_posts, recent_users=recent_users)
+    except Exception as e:
+        flash(f'Error loading dashboard: {str(e)}', 'danger')
+        return redirect(url_for('login'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
@@ -113,27 +120,60 @@ def login():
         return redirect(url_for('admin_dashboard'))
     
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        remember = request.form.get('remember') == 'on'
-        
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user, remember=remember)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('admin_dashboard'))
-        
-        flash('Invalid username or password', 'danger')
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
+            remember = request.form.get('remember') == 'on'
+            
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user, remember=remember)
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('admin_dashboard'))
+            
+            flash('Invalid username or password', 'danger')
+        except Exception as e:
+            flash(f'Error during login: {str(e)}', 'danger')
     
     return render_template('admin/login.html')
 
 @app.route('/admin/logout')
 @login_required
 def logout():
-    logout_user()
+    try:
+        logout_user()
+        flash('You have been logged out successfully.', 'success')
+    except Exception as e:
+        flash(f'Error during logout: {str(e)}', 'danger')
     return redirect(url_for('login'))
+
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('admin/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('admin/500.html'), 500
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            # Create admin user if it doesn't exist
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                admin = User(
+                    username='admin',
+                    email='admin@example.com',
+                    full_name='Administrator',
+                    role='admin'
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                print('Admin user created successfully!')
+        except Exception as e:
+            print(f'Error initializing database: {str(e)}')
     app.run(debug=True) 
