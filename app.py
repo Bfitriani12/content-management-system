@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 import time
 from flask_wtf.csrf import CSRFProtect
 import uuid
+from flask_migrate import Migrate
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +35,7 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 
 # Initialize extensions
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)  # Initialize Flask-Migrate
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
@@ -97,6 +99,13 @@ class Settings(db.Model):
     mail_password = db.Column(db.String(100))
     mail_use_tls = db.Column(db.Boolean, default=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    theme = db.Column(db.String(50))
+    font_size = db.Column(db.String(20))
+    notify_new_comments = db.Column(db.Boolean, default=True)
+    notify_new_users = db.Column(db.Boolean, default=True)
+    email_notifications = db.Column(db.Boolean, default=True)
+    allow_comments = db.Column(db.Boolean, default=True)
+    require_approval = db.Column(db.Boolean, default=False)
 
 class Media(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -498,14 +507,13 @@ def admin_delete_user(user_id):
     flash('User deleted successfully!', 'success')
     return redirect(url_for('admin_users'))
 
-@app.route('/admin/settings')
+@app.route('/admin/settings', methods=['GET'])
 @login_required
 def admin_settings():
     if current_user.role != 'admin':
-        flash('You do not have permission to access settings.', 'danger')
+        flash('Anda tidak memiliki akses ke halaman ini.', 'danger')
         return redirect(url_for('admin_dashboard'))
     
-    # Get or create settings
     settings = Settings.query.first()
     if not settings:
         settings = Settings()
@@ -518,58 +526,61 @@ def admin_settings():
 @login_required
 def admin_update_settings():
     if current_user.role != 'admin':
-        flash('You do not have permission to update settings.', 'danger')
-        return redirect(url_for('admin_settings'))
+        flash('Anda tidak memiliki akses ke halaman ini.', 'danger')
+        return redirect(url_for('admin_dashboard'))
     
-    try:
-        settings = Settings.query.first()
-        if not settings:
-            settings = Settings()
-            db.session.add(settings)
-        
-        # Update site settings
-        settings.site_name = request.form.get('site_name')
-        settings.site_description = request.form.get('site_description')
-        settings.posts_per_page = int(request.form.get('posts_per_page', 10))
-        
-        db.session.commit()
-        flash('Site settings updated successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating settings: {str(e)}', 'danger')
+    settings = Settings.query.first()
+    if not settings:
+        settings = Settings()
+        db.session.add(settings)
     
+    settings.site_name = request.form.get('site_name')
+    settings.site_description = request.form.get('site_description')
+    settings.theme = request.form.get('theme')
+    settings.font_size = request.form.get('font_size')
+    settings.posts_per_page = int(request.form.get('posts_per_page'))
+    
+    db.session.commit()
+    flash('Pengaturan berhasil diperbarui.', 'success')
     return redirect(url_for('admin_settings'))
 
-@app.route('/admin/settings/email/update', methods=['POST'])
+@app.route('/admin/settings/notifications', methods=['POST'])
 @login_required
-def admin_update_email_settings():
+def admin_update_notification_settings():
     if current_user.role != 'admin':
-        flash('You do not have permission to update email settings.', 'danger')
-        return redirect(url_for('admin_settings'))
+        flash('Anda tidak memiliki akses ke halaman ini.', 'danger')
+        return redirect(url_for('admin_dashboard'))
     
-    try:
-        settings = Settings.query.first()
-        if not settings:
-            settings = Settings()
-            db.session.add(settings)
-        
-        # Update email settings
-        settings.mail_server = request.form.get('mail_server')
-        settings.mail_port = int(request.form.get('mail_port', 587))
-        settings.mail_username = request.form.get('mail_username')
-        settings.mail_use_tls = request.form.get('mail_use_tls') == 'on'
-        
-        # Only update password if a new one is provided
-        new_password = request.form.get('mail_password')
-        if new_password:
-            settings.mail_password = new_password
-        
-        db.session.commit()
-        flash('Email settings updated successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating email settings: {str(e)}', 'danger')
+    settings = Settings.query.first()
+    if not settings:
+        settings = Settings()
+        db.session.add(settings)
     
+    settings.notify_new_comments = 'notify_new_comments' in request.form
+    settings.notify_new_users = 'notify_new_users' in request.form
+    settings.email_notifications = 'email_notifications' in request.form
+    
+    db.session.commit()
+    flash('Pengaturan notifikasi berhasil diperbarui.', 'success')
+    return redirect(url_for('admin_settings'))
+
+@app.route('/admin/settings/privacy', methods=['POST'])
+@login_required
+def admin_update_privacy_settings():
+    if current_user.role != 'admin':
+        flash('Anda tidak memiliki akses ke halaman ini.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    
+    settings = Settings.query.first()
+    if not settings:
+        settings = Settings()
+        db.session.add(settings)
+    
+    settings.allow_comments = 'allow_comments' in request.form
+    settings.require_approval = 'require_approval' in request.form
+    
+    db.session.commit()
+    flash('Pengaturan privasi berhasil diperbarui.', 'success')
     return redirect(url_for('admin_settings'))
 
 @app.route('/admin/profile', methods=['GET', 'POST'])
