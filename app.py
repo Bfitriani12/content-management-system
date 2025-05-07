@@ -690,6 +690,12 @@ def reset_password(token):
         flash(f'Error processing request: {str(e)}', 'danger')
         return redirect(url_for('login'))
 
+@app.route('/admin/posts/<int:post_id>/view')
+@login_required
+def admin_view_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('admin/post_view.html', post=post)
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
