@@ -14,6 +14,23 @@
         .navbar {
             box-shadow: 0 2px 4px rgba(0,0,0,.1);
         }
+        
+        /* Animation styles */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -89,7 +106,7 @@
     </nav>
     {% endif %}
 
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 fade-in">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -107,6 +124,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script>
+        // Add fade-in animation to all cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.animation = `fadeIn 0.5s ease-in forwards ${index * 0.1}s`;
+            });
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html> 
