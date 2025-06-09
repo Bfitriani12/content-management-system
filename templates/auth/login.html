@@ -23,11 +23,12 @@
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
                         <label class="form-check-label" for="remember">Remember me</label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
-            </div>
-            <div class="card-footer text-center">
-                <p class="mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+                <div class="text-center mt-3">
+                    <span>Belum punya akun?</span>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-success w-100 mt-2">Daftar Akun</a>
+                </div>
             </div>
         </div>
     </div>
