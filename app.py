@@ -707,6 +707,37 @@ def admin_view_post(post_id):
     post = Post.query.get_or_404(post_id)
     return render_template('admin/post_view.html', post=post)
 
+@app.route('/admin/register', methods=['GET', 'POST'])
+def admin_register():
+    if current_user.is_authenticated:
+        return redirect(url_for('admin_dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        full_name = request.form.get('full_name')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('admin/register.html')
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists.', 'danger')
+            return render_template('admin/register.html')
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists.', 'danger')
+            return render_template('admin/register.html')
+        
+        user = User(username=username, email=email, full_name=full_name)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('admin/register.html')
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
